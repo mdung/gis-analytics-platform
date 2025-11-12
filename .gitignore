@@ -1,0 +1,52 @@
+# Java
+*.class
+*.log
+*.jar
+*.war
+*.ear
+target/
+.idea/
+*.iml
+.vscode/
+
+# Node
+node_modules/
+dist/
+build/
+.npm
+.eslintcache
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
+*.seed
+*.pid.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.sqlite
+
+# Uploads
+uploads/
+tiles/
+
