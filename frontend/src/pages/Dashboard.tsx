@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { authApi } from '../lib/auth';
 import MapView from '../components/map/MapView';
@@ -8,7 +8,23 @@ import apiClient from '../lib/apiClient';
 import { Layer, Feature } from '../types';
 
 export default function Dashboard() {
-  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+  const { user, logout, setUser } = useAuthStore();
+
+  useEffect(() => {
+    // Initialize user from localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        authApi.logout();
+        navigate('/login');
+      }
+    } else {
+      navigate('/login');
+    }
+  }, [setUser, navigate]);
   const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
 
   const { data: layers = [] } = useQuery<Layer[]>({

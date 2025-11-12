@@ -8,15 +8,6 @@
       "mbtiles": "tiles"
     }
   },
-  "data": {
-    "osm": {
-      "mbtiles": "tiles/osm.mbtiles"
-    }
-  },
-  "styles": {
-    "osm-bright": {
-      "style": "styles/osm-bright/style.json"
-    }
-  }
+  "data": {},
+  "styles": {}
 }
-

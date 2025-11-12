@@ -11,10 +11,12 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -108,13 +110,13 @@ public class SpatialQueryService {
         // Get all features from source layer
         List<Feature> sourceFeatures = featureRepository.findByLayerIdAndDeletedAtIsNull(
                 request.getLayerId(),
-                org.springframework.data.domain.PageRequest.of(0, 10000)
+                PageRequest.of(0, 10000)
         ).getContent();
         
         // Get all features from target layer
         List<Feature> targetFeatures = featureRepository.findByLayerIdAndDeletedAtIsNull(
                 request.getTargetLayerId(),
-                org.springframework.data.domain.PageRequest.of(0, 10000)
+                PageRequest.of(0, 10000)
         ).getContent();
         
         // Perform spatial join based on predicate
