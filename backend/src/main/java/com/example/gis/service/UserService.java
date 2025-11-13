@@ -41,6 +41,11 @@ public class UserService {
         return toDto(user);
     }
 
+    public User findUserEntityByUsername(String username) {
+        return userRepository.findByUsernameAndDeletedAtIsNull(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
     @Transactional
     public UserDto create(CreateUserRequest request) {
         // Check if username already exists
