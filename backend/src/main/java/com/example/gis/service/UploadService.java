@@ -10,6 +10,9 @@ import com.example.gis.repository.UploadRepository;
 import com.example.gis.repository.UserRepository;
 import com.example.gis.util.CRSTransformer;
 import com.example.gis.util.FileParser;
+import com.example.gis.util.ShapefileParser;
+import com.example.gis.util.CSVParser;
+import com.example.gis.util.GeometryValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +39,10 @@ public class UploadService {
     private final UserRepository userRepository;
     private final MinIOService minIOService;
     private final FileParser fileParser;
+    private final ShapefileParser shapefileParser;
+    private final CSVParser csvParser;
     private final CRSTransformer crsTransformer;
+    private final GeometryValidator geometryValidator;
     private final ObjectMapper objectMapper;
 
     @Transactional

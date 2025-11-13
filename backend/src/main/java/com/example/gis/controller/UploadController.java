@@ -29,7 +29,7 @@ public class UploadController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN') or hasRole('EDITOR')")
-    @Operation(summary = "Upload file", description = "Upload GeoJSON, Shapefile, or CSV file for processing (ADMIN/EDITOR only)")
+    @Operation(summary = "Upload file", description = "Upload GeoJSON, Shapefile ZIP, or CSV file for processing. CSV lat/lng columns can be auto-detected if not provided. (ADMIN/EDITOR only)")
     public ResponseEntity<UploadDto> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "layerId", required = false) UUID layerId,
