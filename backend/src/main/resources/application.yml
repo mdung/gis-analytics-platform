@@ -1,6 +1,13 @@
 tileserver:
   url: http://tileserver:8080
 
+isochrone:
+  provider: internal # internal, osrm, graphhopper
+  osrm:
+    url: http://router.project-osrm.org
+  graphhopper:
+    url: http://localhost:8989
+
 spring:
   application:
     name: gis-analytics-platform

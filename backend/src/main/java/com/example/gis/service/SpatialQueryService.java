@@ -142,6 +142,153 @@ public class SpatialQueryService {
         return result;
     }
 
+    /**
+     * Touches query: Find features that touch the given geometry
+     */
+    public List<FeatureDto> touchesQuery(SpatialQueryRequest request) {
+        if (request.getPolygonGeoJson() == null) {
+            throw new IllegalArgumentException("Polygon GeoJSON is required for touches query");
+        }
+        
+        // Generate cache key
+        String cacheKey = cacheService.generateSpatialQueryKey(
+                request.getLayerId(),
+                "touches",
+                request.getPolygonGeoJson().toString()
+        );
+        
+        // Try cache first
+        List<FeatureDto> cached = cacheService.getCachedSpatialQuery(cacheKey, List.class);
+        if (cached != null) {
+            return cached;
+        }
+        
+        Geometry geometry = geoJsonConverter.geoJsonToGeometry(request.getPolygonGeoJson());
+        String geometryWkt = geometry.toText();
+        
+        List<Feature> features = featureRepository.findFeaturesTouching(
+                request.getLayerId(),
+                geometryWkt
+        );
+        
+        List<FeatureDto> result = features.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+        
+        // Cache result
+        cacheService.cacheSpatialQuery(cacheKey, result, null);
+        
+        return result;
+    }
+
+    /**
+     * Overlaps query: Find features that overlap with the given geometry
+     */
+    public List<FeatureDto> overlapsQuery(SpatialQueryRequest request) {
+        if (request.getPolygonGeoJson() == null) {
+            throw new IllegalArgumentException("Polygon GeoJSON is required for overlaps query");
+        }
+        
+        // Generate cache key
+        String cacheKey = cacheService.generateSpatialQueryKey(
+                request.getLayerId(),
+                "overlaps",
+                request.getPolygonGeoJson().toString()
+        );
+        
+        // Try cache first
+        List<FeatureDto> cached = cacheService.getCachedSpatialQuery(cacheKey, List.class);
+        if (cached != null) {
+            return cached;
+        }
+        
+        Geometry geometry = geoJsonConverter.geoJsonToGeometry(request.getPolygonGeoJson());
+        String geometryWkt = geometry.toText();
+        
+        List<Feature> features = featureRepository.findFeaturesOverlapping(
+                request.getLayerId(),
+                geometryWkt
+        );
+        
+        List<FeatureDto> result = features.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+        
+        // Cache result
+        cacheService.cacheSpatialQuery(cacheKey, result, null);
+        
+        return result;
+    }
+
+    /**
+     * Distance-based query with custom metric
+     */
+    public List<FeatureDto> distanceQuery(SpatialQueryRequest request) {
+        if (request.getCenter() == null || request.getMaxDistance() == null) {
+            throw new IllegalArgumentException("Center and maxDistance are required for distance query");
+        }
+        
+        // Generate cache key
+        String cacheKey = cacheService.generateSpatialQueryKey(
+                request.getLayerId(),
+                "distance",
+                request.getCenter().get(0),
+                request.getCenter().get(1),
+                request.getMaxDistance(),
+                request.getDistanceMetric()
+        );
+        
+        // Try cache first
+        List<FeatureDto> cached = cacheService.getCachedSpatialQuery(cacheKey, List.class);
+        if (cached != null) {
+            return cached;
+        }
+        
+        Point center = geometryFactory.createPoint(
+                new org.locationtech.jts.geom.Coordinate(
+                        request.getCenter().get(0),
+                        request.getCenter().get(1)
+                )
+        );
+        
+        List<Object[]> results;
+        String distanceMetric = request.getDistanceMetric() != null ? 
+                request.getDistanceMetric().toUpperCase() : "HAVERSINE";
+        
+        if ("HAVERSINE".equals(distanceMetric) || "GEOGRAPHIC".equals(distanceMetric)) {
+            // Use geographic distance (Haversine formula)
+            results = featureRepository.findFeaturesWithinDistance(
+                    request.getLayerId(),
+                    center,
+                    request.getMaxDistance()
+            );
+        } else {
+            // Use planar distance
+            results = featureRepository.findFeaturesWithinDistancePlanar(
+                    request.getLayerId(),
+                    center,
+                    request.getMaxDistance()
+            );
+        }
+        
+        List<FeatureDto> result = results.stream()
+                .map(resultItem -> {
+                    Feature feature = (Feature) resultItem[0];
+                    Double distance = resultItem.length > 1 ? ((Number) resultItem[1]).doubleValue() : null;
+                    FeatureDto dto = toDto(feature);
+                    if (distance != null) {
+                        dto.setDistanceMeters(distance);
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+        
+        // Cache result
+        cacheService.cacheSpatialQuery(cacheKey, result, null);
+        
+        return result;
+    }
+
     public List<FeatureDto> spatialJoin(SpatialQueryRequest request) {
         if (request.getTargetLayerId() == null || request.getPredicate() == null) {
             throw new IllegalArgumentException("Target layer ID and predicate are required for spatial join");
