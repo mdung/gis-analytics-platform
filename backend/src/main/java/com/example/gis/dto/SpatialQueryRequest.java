@@ -21,7 +21,11 @@ public class SpatialQueryRequest {
     
     // For spatial join
     private UUID targetLayerId;
-    private String predicate; // INTERSECTS, WITHIN, CONTAINS
+    private String predicate; // INTERSECTS, WITHIN, CONTAINS, TOUCHES, OVERLAPS, etc.
+    
+    // For distance-based queries
+    private String distanceMetric; // HAVERSINE, PLANAR, etc.
+    private Double maxDistance; // Maximum distance for distance-based queries
     
     // For attribute filter
     private Map<String, Object> attributeFilters;

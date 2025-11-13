@@ -57,6 +57,24 @@ public class SpatialQueryController {
         return ResponseEntity.ok(spatialQueryService.spatialJoin(request));
     }
 
+    @PostMapping("/touches")
+    @Operation(summary = "Touches query", description = "Find features that touch the given geometry")
+    public ResponseEntity<List<FeatureDto>> touchesQuery(@Valid @RequestBody SpatialQueryRequest request) {
+        return ResponseEntity.ok(spatialQueryService.touchesQuery(request));
+    }
+
+    @PostMapping("/overlaps")
+    @Operation(summary = "Overlaps query", description = "Find features that overlap with the given geometry")
+    public ResponseEntity<List<FeatureDto>> overlapsQuery(@Valid @RequestBody SpatialQueryRequest request) {
+        return ResponseEntity.ok(spatialQueryService.overlapsQuery(request));
+    }
+
+    @PostMapping("/distance")
+    @Operation(summary = "Distance query", description = "Find features within a distance using custom metric (HAVERSINE or PLANAR)")
+    public ResponseEntity<List<FeatureDto>> distanceQuery(@Valid @RequestBody SpatialQueryRequest request) {
+        return ResponseEntity.ok(spatialQueryService.distanceQuery(request));
+    }
+
     @GetMapping("/geojson")
     @Operation(summary = "Export as GeoJSON", description = "Export query results as GeoJSON FeatureCollection")
     public ResponseEntity<ObjectNode> exportGeoJson(@RequestParam UUID layerId) {

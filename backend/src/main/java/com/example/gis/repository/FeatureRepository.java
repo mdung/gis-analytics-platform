@@ -64,5 +64,39 @@ public interface FeatureRepository extends JpaRepository<Feature, UUID> {
                                      @Param("minLat") double minLat,
                                      @Param("maxLng") double maxLng,
                                      @Param("maxLat") double maxLat);
+    
+    // Touches query: features that touch the given geometry
+    @Query(value = "SELECT f.* FROM features f " +
+            "WHERE f.layer_id = :layerId AND f.deleted_at IS NULL " +
+            "AND ST_Touches(f.geom, ST_GeomFromText(:geometry, 4326))", nativeQuery = true)
+    List<Feature> findFeaturesTouching(@Param("layerId") UUID layerId, 
+                                      @Param("geometry") String geometry);
+    
+    // Overlaps query: features that overlap with the given geometry
+    @Query(value = "SELECT f.* FROM features f " +
+            "WHERE f.layer_id = :layerId AND f.deleted_at IS NULL " +
+            "AND ST_Overlaps(f.geom, ST_GeomFromText(:geometry, 4326))", nativeQuery = true)
+    List<Feature> findFeaturesOverlapping(@Param("layerId") UUID layerId, 
+                                         @Param("geometry") String geometry);
+    
+    // Distance-based query with custom metric (Haversine for geographic)
+    @Query(value = "SELECT f.*, ST_Distance(f.geom::geography, :point::geography) as distance " +
+            "FROM features f " +
+            "WHERE f.layer_id = :layerId AND f.deleted_at IS NULL " +
+            "AND ST_DWithin(f.geom::geography, :point::geography, :distanceMeters) " +
+            "ORDER BY distance", nativeQuery = true)
+    List<Object[]> findFeaturesWithinDistance(@Param("layerId") UUID layerId,
+                                               @Param("point") Point point,
+                                               @Param("distanceMeters") double distanceMeters);
+    
+    // Distance-based query with planar metric
+    @Query(value = "SELECT f.*, ST_Distance(f.geom, :point::geometry) as distance " +
+            "FROM features f " +
+            "WHERE f.layer_id = :layerId AND f.deleted_at IS NULL " +
+            "AND ST_DWithin(f.geom, :point::geometry, :distance) " +
+            "ORDER BY distance", nativeQuery = true)
+    List<Object[]> findFeaturesWithinDistancePlanar(@Param("layerId") UUID layerId,
+                                                      @Param("point") Point point,
+                                                      @Param("distance") double distance);
 }
 
