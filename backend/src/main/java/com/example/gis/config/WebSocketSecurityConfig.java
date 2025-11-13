@@ -1,7 +1,6 @@
 package com.example.gis.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.security.config.annotation.web.messaging.MessageSecurityMetadataSourceRegistry;
 import org.springframework.security.config.annotation.web.socket.AbstractSecurityWebSocketMessageBrokerConfigurer;
 
@@ -11,12 +10,12 @@ public class WebSocketSecurityConfig extends AbstractSecurityWebSocketMessageBro
     @Override
     protected void configureInbound(MessageSecurityMetadataSourceRegistry messages) {
         messages
-                // Allow subscription to device topics
+                // Allow subscription to device topics (can be made authenticated if needed)
                 .simpDestMatchers("/topic/devices/**", "/topic/geofences/**").permitAll()
                 // Require authentication for sending messages
                 .simpDestMatchers("/app/**").authenticated()
-                // Allow connection
-                .anyMessage().authenticated();
+                // Allow connection (can be made authenticated if needed)
+                .anyMessage().permitAll();
     }
 
     @Override
