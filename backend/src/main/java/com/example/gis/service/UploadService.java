@@ -91,17 +91,15 @@ public class UploadService {
             if (fileName.endsWith(".geojson") || fileName.endsWith(".json")) {
                 parsedFeatures = fileParser.parseGeoJSON(file.getInputStream());
             } else if (fileName.endsWith(".zip")) {
-                // Handle Shapefile ZIP
-                parsedFeatures = parseShapefileZip(file.getInputStream());
-                // Try to detect SRID from PRJ if available
-                // sourceSrid = detectSridFromZip(file);
+                // Handle Shapefile ZIP with full support
+                ShapefileParser.ShapefileParseResult result = shapefileParser.parseShapefileZip(file.getInputStream());
+                parsedFeatures = result.getFeatures();
+                sourceSrid = result.getSourceSrid();
             } else if (fileName.endsWith(".csv")) {
-                if (latColumn == null || lngColumn == null) {
-                    throw new IllegalArgumentException("Lat/Lng columns required for CSV");
-                }
-                parsedFeatures = fileParser.parseCSV(file.getInputStream(), latColumn, lngColumn);
+                // Auto-detect or use provided columns
+                parsedFeatures = csvParser.parseCSV(file.getInputStream(), latColumn, lngColumn);
             } else {
-                throw new IllegalArgumentException("Unsupported file format");
+                throw new IllegalArgumentException("Unsupported file format: " + fileName);
             }
             
             if (parsedFeatures.isEmpty()) {
