@@ -11,5 +11,8 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByUsernameAndDeletedAtIsNull(String username);
     boolean existsByUsernameAndDeletedAtIsNull(String username);
+    
+    // For admin user listing (exclude deleted)
+    org.springframework.data.domain.Page<User> findByDeletedAtIsNull(org.springframework.data.domain.Pageable pageable);
 }
 
