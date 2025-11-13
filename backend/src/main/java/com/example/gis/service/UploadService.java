@@ -127,10 +127,33 @@ public class UploadService {
                     Geometry geometry = parsedFeature.getGeometry();
                     Integer featureSrid = parsedFeature.getSourceSrid() != null ? parsedFeature.getSourceSrid() : sourceSrid;
                     
+                    // Validate geometry
+                    GeometryValidator.ValidationResult validation = geometryValidator.validate(geometry);
+                    if (!validation.isValid()) {
+                        log.warn("Invalid geometry, attempting normalization: {}", validation.getErrorMessage());
+                        geometry = geometryValidator.normalize(geometry);
+                        validation = geometryValidator.validate(geometry);
+                        if (!validation.isValid()) {
+                            log.warn("Failed to fix invalid geometry: {}", validation.getErrorMessage());
+                            failedCount++;
+                            continue;
+                        }
+                    }
+                    
                     // Transform to target SRID (4326)
-                    if (!featureSrid.equals(4326)) {
+                    if (featureSrid != null && !featureSrid.equals(4326)) {
                         geometry = crsTransformer.transform(geometry, featureSrid, 4326);
                     }
+                    
+                    // Final validation after transformation
+                    if (!geometryValidator.isWithinBounds(geometry)) {
+                        log.warn("Geometry out of bounds after transformation");
+                        failedCount++;
+                        continue;
+                    }
+                    
+                    // Normalize final geometry
+                    geometry = geometryValidator.normalize(geometry);
                     
                     Feature feature = Feature.builder()
                             .layer(layer)
@@ -142,7 +165,7 @@ public class UploadService {
                     features.add(feature);
                     successCount++;
                 } catch (Exception e) {
-                    log.warn("Failed to process feature: {}", e.getMessage());
+                    log.warn("Failed to process feature: {}", e.getMessage(), e);
                     failedCount++;
                 }
             }
@@ -180,11 +203,6 @@ public class UploadService {
         return CompletableFuture.completedFuture(null);
     }
 
-    private List<FileParser.ParsedFeature> parseShapefileZip(InputStream zipStream) throws Exception {
-        // For now, return empty - full ZIP parsing requires more complex handling
-        // In production, use ZipInputStream to extract .shp, .dbf, .prj files
-        throw new UnsupportedOperationException("ZIP Shapefile parsing not yet fully implemented. Please extract and upload .shp/.dbf files separately.");
-    }
 
     private Layer createLayerFromFile(String fileName, FileParser.ParsedFeature sampleFeature) {
         String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
