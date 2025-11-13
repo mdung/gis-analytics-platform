@@ -211,7 +211,6 @@ public class CacheService {
     /**
      * Clear cache by pattern
      */
-    @CacheEvict(allEntries = true)
     public void clearCacheByPattern(String pattern) {
         try {
             Set<String> keys = redisTemplate.keys(pattern);
