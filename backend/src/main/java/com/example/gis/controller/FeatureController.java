@@ -1,6 +1,9 @@
 package com.example.gis.controller;
 
+import com.example.gis.dto.ClusterPoint;
+import com.example.gis.dto.ClusterRequest;
 import com.example.gis.dto.FeatureDto;
+import com.example.gis.service.ClusteringService;
 import com.example.gis.service.FeatureService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +24,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FeatureController {
     private final FeatureService featureService;
+    private final ClusteringService clusteringService;
 
     @GetMapping
     @Operation(summary = "List features", description = "Get paginated list of features by layer")
@@ -68,6 +72,29 @@ public class FeatureController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         featureService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/cluster")
+    @Operation(summary = "Get clustered features", description = "Get features clustered by zoom level and bounding box")
+    public ResponseEntity<List<ClusterPoint>> getClusteredFeatures(
+            @RequestParam UUID layerId,
+            @RequestParam(required = false) Integer zoom,
+            @RequestParam(required = false) Double minLng,
+            @RequestParam(required = false) Double minLat,
+            @RequestParam(required = false) Double maxLng,
+            @RequestParam(required = false) Double maxLat,
+            @RequestParam(required = false) Integer clusterRadius) {
+        
+        ClusterRequest request = new ClusterRequest();
+        request.setLayerId(layerId);
+        request.setZoom(zoom);
+        request.setMinLng(minLng);
+        request.setMinLat(minLat);
+        request.setMaxLng(maxLng);
+        request.setMaxLat(maxLat);
+        request.setClusterRadius(clusterRadius);
+        
+        return ResponseEntity.ok(clusteringService.clusterFeatures(request));
     }
 }
 
