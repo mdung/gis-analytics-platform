@@ -4,6 +4,7 @@ import com.example.gis.dto.FeatureDto;
 import com.example.gis.dto.SpatialQueryRequest;
 import com.example.gis.entity.Feature;
 import com.example.gis.repository.FeatureRepository;
+import com.example.gis.service.CacheService;
 import com.example.gis.util.GeoJsonConverter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +25,28 @@ import java.util.stream.Collectors;
 public class SpatialQueryService {
     private final FeatureRepository featureRepository;
     private final GeoJsonConverter geoJsonConverter;
+    private final CacheService cacheService;
     private final ObjectMapper objectMapper;
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
     public List<FeatureDto> bufferQuery(SpatialQueryRequest request) {
         if (request.getCenter() == null || request.getRadiusMeters() == null) {
             throw new IllegalArgumentException("Center and radiusMeters are required for buffer query");
+        }
+        
+        // Generate cache key
+        String cacheKey = cacheService.generateSpatialQueryKey(
+                request.getLayerId(),
+                "buffer",
+                request.getCenter().get(0),
+                request.getCenter().get(1),
+                request.getRadiusMeters()
+        );
+        
+        // Try cache first
+        List<FeatureDto> cached = cacheService.getCachedSpatialQuery(cacheKey, List.class);
+        if (cached != null) {
+            return cached;
         }
         
         Point center = geometryFactory.createPoint(
@@ -45,9 +62,14 @@ public class SpatialQueryService {
                 request.getRadiusMeters()
         );
         
-        return features.stream()
+        List<FeatureDto> result = features.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
+        
+        // Cache result
+        cacheService.cacheSpatialQuery(cacheKey, result, null);
+        
+        return result;
     }
 
     public List<FeatureDto> withinQuery(SpatialQueryRequest request) {
@@ -83,16 +105,29 @@ public class SpatialQueryService {
     }
 
     public List<FeatureDto> nearestQuery(UUID layerId, double lng, double lat, int k) {
+        // Generate cache key
+        String cacheKey = cacheService.generateSpatialQueryKey(
+                layerId,
+                "nearest",
+                lng, lat, k
+        );
+        
+        // Try cache first
+        List<FeatureDto> cached = cacheService.getCachedSpatialQuery(cacheKey, List.class);
+        if (cached != null) {
+            return cached;
+        }
+        
         Point point = geometryFactory.createPoint(
                 new org.locationtech.jts.geom.Coordinate(lng, lat)
         );
         
         List<Object[]> results = featureRepository.findNearestFeatures(layerId, point, k);
         
-        return results.stream()
-                .map(result -> {
-                    Feature feature = (Feature) result[0];
-                    Double distance = result.length > 1 ? ((Number) result[1]).doubleValue() : null;
+        List<FeatureDto> result = results.stream()
+                .map(resultItem -> {
+                    Feature feature = (Feature) resultItem[0];
+                    Double distance = resultItem.length > 1 ? ((Number) resultItem[1]).doubleValue() : null;
                     FeatureDto dto = toDto(feature);
                     if (distance != null) {
                         dto.setDistanceMeters(distance);
@@ -100,6 +135,11 @@ public class SpatialQueryService {
                     return dto;
                 })
                 .collect(Collectors.toList());
+        
+        // Cache result
+        cacheService.cacheSpatialQuery(cacheKey, result, null);
+        
+        return result;
     }
 
     public List<FeatureDto> spatialJoin(SpatialQueryRequest request) {

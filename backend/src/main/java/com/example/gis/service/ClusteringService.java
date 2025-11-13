@@ -4,6 +4,7 @@ import com.example.gis.dto.ClusterPoint;
 import com.example.gis.dto.ClusterRequest;
 import com.example.gis.entity.Feature;
 import com.example.gis.repository.FeatureRepository;
+import com.example.gis.service.CacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ClusteringService {
     private final FeatureRepository featureRepository;
+    private final CacheService cacheService;
 
     /**
      * Cluster features based on zoom level and bounding box
@@ -64,7 +66,28 @@ public class ClusteringService {
         int clusterRadius = request.getClusterRadius() != null ? 
                 request.getClusterRadius() : calculateClusterRadius(zoom);
 
-        return performClustering(pointFeatures, clusterRadius, request);
+        // Generate cache key
+        String cacheKey = cacheService.generateSpatialQueryKey(
+                request.getLayerId(),
+                "cluster",
+                zoom,
+                request.getMinLng(), request.getMinLat(),
+                request.getMaxLng(), request.getMaxLat(),
+                clusterRadius
+        );
+
+        // Try cache first
+        List<ClusterPoint> cached = cacheService.getCachedCluster(cacheKey, ClusterPoint.class);
+        if (cached != null) {
+            return cached;
+        }
+
+        List<ClusterPoint> result = performClustering(pointFeatures, clusterRadius, request);
+
+        // Cache result
+        cacheService.cacheCluster(cacheKey, result, null);
+
+        return result;
     }
 
     /**

@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/uploads/**").hasAnyRole("ADMIN", "EDITOR")
                 .requestMatchers("/api/minio/**").hasAnyRole("ADMIN", "EDITOR", "VIEWER")
                 .requestMatchers("/api/export/**").hasAnyRole("ADMIN", "EDITOR", "VIEWER")
+                .requestMatchers("/api/heatmap/**").hasAnyRole("ADMIN", "EDITOR", "VIEWER")
                 .requestMatchers("/api/users/me/**").hasAnyRole("ADMIN", "EDITOR", "VIEWER")
                 .requestMatchers("/api/users/**").hasRole("ADMIN")
                 .anyRequest().authenticated()

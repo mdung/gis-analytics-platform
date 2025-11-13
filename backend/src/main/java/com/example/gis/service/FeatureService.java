@@ -7,6 +7,7 @@ import com.example.gis.entity.User;
 import com.example.gis.repository.FeatureRepository;
 import com.example.gis.repository.LayerRepository;
 import com.example.gis.repository.UserRepository;
+import com.example.gis.service.CacheService;
 import com.example.gis.util.GeoJsonConverter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class FeatureService {
     private final LayerRepository layerRepository;
     private final UserRepository userRepository;
     private final GeoJsonConverter geoJsonConverter;
+    private final CacheService cacheService;
     private final ObjectMapper objectMapper;
 
     public Page<FeatureDto> findByLayerId(UUID layerId, Pageable pageable) {
@@ -39,10 +41,23 @@ public class FeatureService {
     }
 
     public List<FeatureDto> findByLayerIdAndBbox(UUID layerId, double minLng, double minLat, double maxLng, double maxLat) {
-        return featureRepository.findFeaturesInBbox(layerId, minLng, minLat, maxLng, maxLat)
+        // Try cache first
+        List<FeatureDto> cached = cacheService.getCachedFeatureBbox(
+                layerId, minLng, minLat, maxLng, maxLat, FeatureDto.class);
+        if (cached != null) {
+            return cached;
+        }
+
+        // Query database
+        List<FeatureDto> result = featureRepository.findFeaturesInBbox(layerId, minLng, minLat, maxLng, maxLat)
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
+
+        // Cache result
+        cacheService.cacheFeatureBbox(layerId, minLng, minLat, maxLng, maxLat, result);
+
+        return result;
     }
 
     public FeatureDto findById(UUID id) {
