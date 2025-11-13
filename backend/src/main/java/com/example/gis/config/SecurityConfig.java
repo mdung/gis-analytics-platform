@@ -45,6 +45,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/minio/**").hasAnyRole("ADMIN", "EDITOR", "VIEWER")
                 .requestMatchers("/api/export/**").hasAnyRole("ADMIN", "EDITOR", "VIEWER")
                 .requestMatchers("/api/heatmap/**").hasAnyRole("ADMIN", "EDITOR", "VIEWER")
+                .requestMatchers("/api/tiles/**").hasAnyRole("ADMIN", "EDITOR", "VIEWER")
+                .requestMatchers("/api/audit/**").hasRole("ADMIN")
                 .requestMatchers("/api/users/me/**").hasAnyRole("ADMIN", "EDITOR", "VIEWER")
                 .requestMatchers("/api/users/**").hasRole("ADMIN")
                 .anyRequest().authenticated()

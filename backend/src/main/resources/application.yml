@@ -1,3 +1,6 @@
+tileserver:
+  url: http://tileserver:8080
+
 spring:
   application:
     name: gis-analytics-platform
