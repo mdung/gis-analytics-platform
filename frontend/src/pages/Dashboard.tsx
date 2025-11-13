@@ -60,9 +60,15 @@ export default function Dashboard() {
             <span className="text-sm text-gray-600">
               {user?.username} ({user?.role})
             </span>
-            <nav className="flex gap-2">
+            <nav className="flex gap-2 flex-wrap">
               <Link to="/layers" className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">
                 Layers
+              </Link>
+              <Link to="/upload" className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">
+                Upload
+              </Link>
+              <Link to="/export" className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">
+                Export
               </Link>
               <Link to="/query" className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">
                 Query
@@ -70,9 +76,19 @@ export default function Dashboard() {
               <Link to="/geofence" className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">
                 Geofence
               </Link>
-              <Link to="/upload" className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">
-                Upload
+              <Link to="/tracking" className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">
+                Tracking
               </Link>
+              {user?.role === 'ADMIN' && (
+                <>
+                  <Link to="/users" className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">
+                    Users
+                  </Link>
+                  <Link to="/audit" className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">
+                    Audit
+                  </Link>
+                </>
+              )}
             </nav>
             <button
               onClick={handleLogout}

@@ -6,6 +6,10 @@ import LayerManagement from './pages/LayerManagement';
 import GeoQueryBuilder from './pages/GeoQueryBuilder';
 import GeofencePage from './pages/GeofencePage';
 import UploadPage from './pages/UploadPage';
+import UserManagement from './pages/UserManagement';
+import ExportPage from './pages/ExportPage';
+import LiveTrackingPage from './pages/LiveTrackingPage';
+import AuditLogsPage from './pages/AuditLogsPage';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -32,6 +36,22 @@ function App() {
       <Route
         path="/upload"
         element={isAuthenticated ? <UploadPage /> : <Navigate to="/login" />}
+      />
+      <Route
+        path="/export"
+        element={isAuthenticated ? <ExportPage /> : <Navigate to="/login" />}
+      />
+      <Route
+        path="/tracking"
+        element={isAuthenticated ? <LiveTrackingPage /> : <Navigate to="/login" />}
+      />
+      <Route
+        path="/users"
+        element={isAuthenticated ? <UserManagement /> : <Navigate to="/login" />}
+      />
+      <Route
+        path="/audit"
+        element={isAuthenticated ? <AuditLogsPage /> : <Navigate to="/login" />}
       />
     </Routes>
   );
