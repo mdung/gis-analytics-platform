@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/geofences/**").hasAnyRole("ADMIN", "EDITOR", "VIEWER")
                 .requestMatchers("/api/uploads/**").hasAnyRole("ADMIN", "EDITOR")
                 .requestMatchers("/api/minio/**").hasAnyRole("ADMIN", "EDITOR", "VIEWER")
+                .requestMatchers("/api/export/**").hasAnyRole("ADMIN", "EDITOR", "VIEWER")
                 .requestMatchers("/api/users/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
