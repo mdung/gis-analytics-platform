@@ -16,6 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DeviceService {
     private final DeviceRepository deviceRepository;
+    private final WebSocketService webSocketService;
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
     public List<Device> findAll() {
@@ -32,13 +33,24 @@ public class DeviceService {
         Device device = deviceRepository.findByCodeAndDeletedAtIsNull(code)
                 .orElseThrow(() -> new RuntimeException("Device not found"));
         
+        // Store previous position for geofence detection
+        Point previousPosition = device.getLastPosition();
+        
         Point point = geometryFactory.createPoint(
                 new org.locationtech.jts.geom.Coordinate(lng, lat)
         );
         device.setLastPosition(point);
         device.setUpdatedAt(java.time.OffsetDateTime.now());
         
-        return deviceRepository.save(device);
+        device = deviceRepository.save(device);
+        
+        // Broadcast position update via WebSocket
+        webSocketService.broadcastDevicePosition(device);
+        
+        // Check geofence enter/exit events
+        webSocketService.checkAndBroadcastGeofenceEvents(device, previousPosition);
+        
+        return device;
     }
 }
 

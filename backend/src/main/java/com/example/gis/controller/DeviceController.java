@@ -32,14 +32,15 @@ public class DeviceController {
     }
 
     @PostMapping("/position")
-    @Operation(summary = "Update device position", description = "Update device position (for tracking)")
+    @Operation(summary = "Update device position", description = "Update device position and broadcast via WebSocket (for tracking)")
     public ResponseEntity<Device> updatePosition(@RequestBody Map<String, Object> request) {
         String code = (String) request.get("code");
         List<Number> coordinates = (List<Number>) request.get("coordinates");
         double lng = coordinates.get(0).doubleValue();
         double lat = coordinates.get(1).doubleValue();
         
-        return ResponseEntity.ok(deviceService.updatePosition(code, lng, lat));
+        Device device = deviceService.updatePosition(code, lng, lat);
+        return ResponseEntity.ok(device);
     }
 }
 
